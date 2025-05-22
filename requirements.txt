@@ -1,0 +1,6 @@
+aiogram==3.*
+SQLAlchemy==2.*
+aiosqlite
+APScheduler==3.*
+python-dateutil
+python-dotenv
