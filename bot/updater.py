@@ -9,6 +9,12 @@ import logging
 from bot.config import LOCAL_TZ
 
 TAGS = ("month", "week", "tomorrow", "today")
+WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+MONTH_RU = (
+    "января","февраля","марта","апреля","мая","июня",
+    "июля","августа","сентября","октября","ноября","декабря"
+)
+
 
 def _local_now():
     return dt.datetime.now(tz=LOCAL_TZ)
@@ -27,13 +33,6 @@ def _bounds(tag: str):
         # следующий месяц
         end = (start + dt.timedelta(days=32)).replace(day=1)
     return start, end, start.astimezone(dt.timezone.utc), end.astimezone(dt.timezone.utc)
-
-# bot/updater.py  — замени _header() и _format_plans()
-
-MONTH_RU = (
-    "января","февраля","марта","апреля","мая","июня",
-    "июля","августа","сентября","октября","ноября","декабря"
-)
 
 def _header(tag: str, start: dt.datetime):
     d, m = start.day, MONTH_RU[start.month-1]
@@ -59,16 +58,17 @@ def _format_plans(rows, tag="month"):
             utc = utc.replace(tzinfo=dt.timezone.utc)
 
         local = utc.astimezone(LOCAL_TZ)
-        if tag in ["today", "tomorrow"]:
+        weekday = WEEKDAYS[local.weekday()]
+
+        if tag == "today":
             lead = local.strftime("%H:%M")
         else:
-            lead = _fmt_date(local)
+            lead = f"{weekday} {local.day:02d} {MONTH_RU[local.month - 1].title()}"
 
-        bullet = "🕘"  # единый значок
-        out.append(f"{bullet} <b>{lead}</b> | {p.title}")
+        out.append(f"🕘 <b>{lead}</b> | {p.title}")
         if p.description:
             out.append(p.description)
-            out.append("")  # пустая строка-разделитель
+            out.append("")
     return "\n".join(out) or "—"
 
 async def ensure_posts(bot: Bot):

@@ -13,8 +13,6 @@ COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 # копируем исходники
 COPY bot/ bot/
-COPY plan.db ./data/
-COPY .env .
 
 # healthcheck: простой запрос getMe
 COPY bot/health.py .
