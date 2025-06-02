@@ -3,11 +3,11 @@ import sys
 
 from aiogram import Bot
 
-from bot.core.config import BOT_TOKEN
+from bot.core.config import config
 
 
 async def main():
-    bot = Bot(BOT_TOKEN)
+    bot = Bot(config.BOT_TOKEN)
     me = await bot.get_me()
     print(me.username)
 

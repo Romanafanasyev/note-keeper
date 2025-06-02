@@ -5,7 +5,7 @@ from datetime import timedelta
 from aiogram import F, Router, types
 from aiogram.filters import Command
 
-from bot.core.config import LOCAL_TZ
+from bot.core.config import config
 from bot.core.db import SessionLocal
 from bot.keyboards.keyboards import main_kb
 from bot.repositories.task_repo import TaskRepo
@@ -15,7 +15,9 @@ router = Router()
 
 
 def _range(tag: str):
-    now = dt.datetime.now(LOCAL_TZ).replace(hour=0, minute=0, second=0, microsecond=0)
+    now = dt.datetime.now(config.LOCAL_TZ).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
     if tag == "today":
         return now, now + timedelta(days=1)
     if tag == "week":
@@ -27,7 +29,7 @@ def _range(tag: str):
 
 
 def _fmt_line(p) -> str:
-    local = p.ts_utc.replace(tzinfo=dt.timezone.utc).astimezone(LOCAL_TZ)
+    local = p.ts_utc.replace(tzinfo=dt.timezone.utc).astimezone(config.LOCAL_TZ)
     lead = local.strftime("%d.%m %H:%M")
     return f"<code>#{p.id:03d}</code> | {lead} | <b>{p.title}</b>"
 

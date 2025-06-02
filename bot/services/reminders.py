@@ -1,14 +1,14 @@
 # bot/services/reminders.py
 import datetime as dt
 
-from bot.core.config import LOCAL_TZ, USER_ID
+from bot.core.config import config
 from bot.core.db import SessionLocal
 from bot.repositories.task_repo import TaskRepo
 from bot.services.task_service import TaskService
 
 
 def next_due(delta_min: int) -> tuple[dt.datetime, dt.datetime]:
-    now_local = dt.datetime.now(LOCAL_TZ)
+    now_local = dt.datetime.now(config.LOCAL_TZ)
     target_local = now_local + dt.timedelta(minutes=delta_min)
     window_start_local = target_local
     window_end_local = target_local + dt.timedelta(minutes=1)
@@ -33,10 +33,10 @@ async def send_reminders(bot):
             p for p in task_service.get_tasks_between(ws90, we90) if not p.reminded_90m
         ]
 
-        users = [USER_ID]
+        users = [config.USER_ID]
 
         async def _notify(plan, time_left: str):
-            local_time = plan.ts_utc.astimezone(LOCAL_TZ)
+            local_time = plan.ts_utc.astimezone(config.LOCAL_TZ)
             for uid in users:
                 await bot.send_message(
                     uid,
