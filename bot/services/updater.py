@@ -1,23 +1,36 @@
 # bot/services/updater.py
 import datetime as dt
+import logging
+
 from aiogram import Bot
+
+from bot.core.config import CHANNEL_ID, LOCAL_TZ
 from bot.core.db import SessionLocal
 from bot.models.models import ChannelPost
-from bot.core.config import CHANNEL_ID
-import logging
-from bot.core.config import LOCAL_TZ
 from bot.repositories.channel_post_repo import ChannelPostRepo
 from bot.repositories.task_repo import TaskRepo
 
 TAGS = ("month", "week", "tomorrow", "today")
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 MONTH_RU = (
-    "январь", "февраль", "март", "апрель", "май", "июнь",
-    "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
+    "январь",
+    "февраль",
+    "март",
+    "апрель",
+    "май",
+    "июнь",
+    "июль",
+    "август",
+    "сентябрь",
+    "октябрь",
+    "ноябрь",
+    "декабрь",
 )
+
 
 def _local_now():
     return dt.datetime.now(tz=LOCAL_TZ)
+
 
 def _bounds(tag: str):
     now = _local_now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -31,7 +44,13 @@ def _bounds(tag: str):
     else:  # month
         start = now.replace(day=1)
         end = (start + dt.timedelta(days=32)).replace(day=1)
-    return start, end, start.astimezone(dt.timezone.utc), end.astimezone(dt.timezone.utc)
+    return (
+        start,
+        end,
+        start.astimezone(dt.timezone.utc),
+        end.astimezone(dt.timezone.utc),
+    )
+
 
 def _header(tag: str, start: dt.datetime):
     d, m = start.day, MONTH_RU[start.month - 1].capitalize()
@@ -44,6 +63,7 @@ def _header(tag: str, start: dt.datetime):
     if tag == "tomorrow":
         return f"<b>📌 Планы на Завтра - {d:02d} {m}</b>\n"
     return f"<b>📅 {m} {start.year}</b>\n"
+
 
 def _format_plans(rows, tag="month"):
     now = _local_now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -73,6 +93,7 @@ def _format_plans(rows, tag="month"):
             out.append("")
     return "\n".join(out) or "—"
 
+
 async def ensure_posts(bot: Bot):
     with SessionLocal() as db_session:
         channel_post_repo = ChannelPostRepo(db_session)
@@ -82,6 +103,7 @@ async def ensure_posts(bot: Bot):
                 continue
             msg = await bot.send_message(CHANNEL_ID, f"⏳ initializing {tag} …")
             channel_post_repo.create(ChannelPost(tag=tag, message_id=msg.message_id))
+
 
 async def update_posts(bot: Bot):
     await ensure_posts(bot)
@@ -97,9 +119,7 @@ async def update_posts(bot: Bot):
             text = _header(tag, start_loc) + "\n\n" + _format_plans(plans, tag)
             try:
                 await bot.edit_message_text(
-                    chat_id=CHANNEL_ID,
-                    message_id=posts[tag],
-                    text=text
+                    chat_id=CHANNEL_ID, message_id=posts[tag], text=text
                 )
             except Exception as e:
                 logging.critical(f"Ошибка во время редактирования сообщ: {e}")

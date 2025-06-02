@@ -1,18 +1,21 @@
 # bot/handlers/edit.py
-from aiogram import Router, types, F
-from aiogram.filters import Command
 import re
-from aiogram.fsm.state import StatesGroup, State
+
+from aiogram import F, Router, types
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+
 from bot.core.db import SessionLocal
+from bot.keyboards.keyboards import main_kb
 from bot.repositories.task_repo import TaskRepo
 from bot.services.updater import update_posts
 from bot.utils.utils import parse_user_datetime
-from bot.keyboards.keyboards import main_kb
 
 router = Router()
 
 ID_RE = re.compile(r"#(\d{1,6})")
+
 
 def extract_id(text: str | None) -> int | None:
     """Вернёт int ID, если в тексте есть #123."""
@@ -37,7 +40,9 @@ def parse_id_or_reply(msg: types.Message) -> int | None:
 async def cmd_del(msg: types.Message):
     pid = parse_id_or_reply(msg)
     if not pid:
-        await msg.answer("Укажи ID: <code>/del 3</code> или ответь /del на сообщение со списком.")
+        await msg.answer(
+            "Укажи ID: <code>/del 3</code> или ответь /del на сообщение со списком."
+        )
         return
 
     with SessionLocal() as db_session:
@@ -54,15 +59,19 @@ async def cmd_del(msg: types.Message):
 
 class EditEvent(StatesGroup):
     choose_field = State()
-    new_value    = State()
+    new_value = State()
+
 
 FIELDS = {"title": "Название", "datetime": "Дата/время", "description": "Описание"}
+
 
 @router.message(Command("edit"))
 async def cmd_edit_start(msg: types.Message, state: FSMContext):
     pid = parse_id_or_reply(msg)
     if not pid:
-        await msg.answer("Укажи ID: <code>/edit 3</code> или ответь /edit на сообщение со списком.")
+        await msg.answer(
+            "Укажи ID: <code>/edit 3</code> или ответь /edit на сообщение со списком."
+        )
         return
 
     await state.update_data(pid=pid)
@@ -92,9 +101,9 @@ async def choose_field(cb: types.CallbackQuery, state: FSMContext):
 @router.message(EditEvent.new_value)
 async def save_new_value(msg: types.Message, state: FSMContext):
     data = await state.get_data()
-    pid   = data["pid"]
+    pid = data["pid"]
     field = data["field"]
-    raw   = msg.text.strip()
+    raw = msg.text.strip()
 
     with SessionLocal() as db_session:
         task_repo = TaskRepo(db_session)

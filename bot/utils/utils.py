@@ -1,8 +1,11 @@
 # bot/utils/utils.py
-import re, datetime as dt
+import datetime as dt
+import re
+
 from bot.core.config import LOCAL_TZ
 
 DATE_RE = re.compile(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?(?:\s+(\d{1,2}):(\d{2}))?")
+
 
 def parse_user_datetime(text: str) -> dt.datetime | None:
     """
