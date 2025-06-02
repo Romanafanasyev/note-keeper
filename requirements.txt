@@ -6,3 +6,4 @@ python-dateutil
 python-dotenv
 black==25.*
 isort==6.*
+pydantic==2.*

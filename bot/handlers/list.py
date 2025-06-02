@@ -8,8 +8,8 @@ from aiogram.filters import Command
 from bot.core.config import LOCAL_TZ
 from bot.core.db import SessionLocal
 from bot.keyboards.keyboards import main_kb
-from bot.models.models import Plan
 from bot.repositories.task_repo import TaskRepo
+from bot.services.task_service import TaskService
 
 router = Router()
 
@@ -26,7 +26,7 @@ def _range(tag: str):
     return start, end
 
 
-def _fmt_line(p: Plan) -> str:
+def _fmt_line(p) -> str:
     local = p.ts_utc.replace(tzinfo=dt.timezone.utc).astimezone(LOCAL_TZ)
     lead = local.strftime("%d.%m %H:%M")
     return f"<code>#{p.id:03d}</code> | {lead} | <b>{p.title}</b>"
@@ -35,8 +35,8 @@ def _fmt_line(p: Plan) -> str:
 def build_list(tag: str) -> str:
     start, end = _range(tag)
     with SessionLocal() as db_session:
-        task_repo = TaskRepo(db_session)
-        rows = task_repo.get_scheduled_between(start, end)
+        service = TaskService(TaskRepo(db_session))
+        rows = service.get_tasks_between(start, end)
 
     if not rows:
         return "Ничего нет."
@@ -49,12 +49,10 @@ def build_list(tag: str) -> str:
 
 @router.message(Command("list"))
 async def cmd_list(msg: types.Message, command: Command):
-    arg = (command.args or "").strip().lower()
-    tag = {"day": "today", "today": "today", "week": "week", "month": "month"}.get(
-        arg, "today"
+    tag = (command.args or "").strip().lower() or "today"
+    await msg.answer(
+        f"<b>{tag.capitalize()}</b>\n\n{build_list(tag)}", reply_markup=main_kb()
     )
-    title = {"today": "Сегодня", "week": "Неделя", "month": "Месяц"}[tag]
-    await msg.answer(f"<b>📋 {title}</b>\n\n{build_list(tag)}", reply_markup=main_kb())
 
 
 @router.message(F.text == "📋 Мои планы")

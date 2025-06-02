@@ -5,8 +5,9 @@ from aiogram.fsm.state import State, StatesGroup
 
 from bot.core.db import SessionLocal
 from bot.keyboards.keyboards import main_kb
-from bot.models.models import Plan
 from bot.repositories.task_repo import TaskRepo
+from bot.services.dtos import CreateTaskDTO
+from bot.services.task_service import TaskService
 from bot.services.updater import update_posts
 from bot.utils.utils import parse_user_datetime
 
@@ -65,11 +66,14 @@ async def get_description(msg: types.Message, state: FSMContext):
 
 async def save_event_and_finish(msg, state, description):
     data = await state.get_data()
-    new_plan = Plan(title=data["title"], description=description, ts_utc=data["ts_utc"])
+
+    dto = CreateTaskDTO(
+        title=data["title"], datetime=data["ts_utc"], description=description
+    )
 
     with SessionLocal() as db_session:
-        task_repo = TaskRepo(db_session)
-        task_repo.create(new_plan)
+        service = TaskService(TaskRepo(db_session))
+        service.create_task(dto)
 
     await update_posts(msg.bot)
     await msg.answer("✅ Событие добавлено!", reply_markup=main_kb())
