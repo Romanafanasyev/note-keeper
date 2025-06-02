@@ -1,17 +1,13 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
 import re
-import datetime as dt
-from sqlalchemy import select
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-
 from bot.db import SessionLocal
 from bot.models import Plan
 from bot.updater import update_posts
 from bot.utils import parse_user_datetime
 from bot.keyboards import main_kb
-from bot.config import LOCAL_TZ
 
 router = Router()
 

@@ -25,8 +25,3 @@ class ChannelPost(Base):
     id         = Column(Integer, primary_key=True)
     tag        = Column(String(10), unique=True)   # month / week / tomorrow / today
     message_id = Column(Integer, nullable=False)
-
-class User(Base):
-    __tablename__ = "users"
-
-    id       = Column(Integer, primary_key=True)

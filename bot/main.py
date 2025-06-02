@@ -25,10 +25,6 @@ dp.include_router(add_router)
 # --- /start & /help ---
 @dp.message(Command("start", "help"))
 async def cmd_start(msg: types.Message):
-    with SessionLocal() as db:
-        if not db.get(User, msg.from_user.id):
-            db.add(User(id=msg.from_user.id))
-            db.commit()
     kb = types.ReplyKeyboardMarkup(
         resize_keyboard=True,
         keyboard=[[types.KeyboardButton(text="➕ Новое событие")]]

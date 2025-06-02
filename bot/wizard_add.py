@@ -5,7 +5,6 @@ from aiogram.fsm.context import FSMContext
 from bot.models import Plan
 from bot.db import SessionLocal
 from bot.utils import parse_user_datetime
-from bot.config import TZ_OFFSET
 from bot.keyboards import main_kb
 from bot.updater import update_posts
 

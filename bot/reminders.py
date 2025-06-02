@@ -3,7 +3,7 @@
 import datetime as dt
 from bot.config import LOCAL_TZ, USER_ID
 from bot.db import SessionLocal
-from bot.models import Plan, User
+from bot.models import Plan
 
 # ──────────────────────────────────────────────
 def next_due(delta_min: int) -> tuple[dt.datetime, dt.datetime]:
