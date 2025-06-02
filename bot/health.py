@@ -1,6 +1,6 @@
-import os, sys, asyncio
+import sys, asyncio
 from aiogram import Bot
-from bot.config import BOT_TOKEN
+from bot.core.config import BOT_TOKEN
 
 async def main():
     bot = Bot(BOT_TOKEN)

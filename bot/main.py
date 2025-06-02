@@ -3,14 +3,14 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.filters import Command
-from bot.config import BOT_TOKEN
-from bot.keyboards import main_kb
-from bot.wizard_add import router as add_router
-from bot.db import init_db, SessionLocal
-from bot.updater import update_posts
-from bot.scheduler import setup_scheduler
-from bot.handlers_list import router as list_router
-from bot.handlers_edit import router as edit_router
+from bot.core.config import BOT_TOKEN
+from bot.keyboards.keyboards import main_kb
+from bot.handlers.add import router as add_router
+from bot.core.db import init_db
+from bot.services.updater import update_posts
+from bot.scheduler.scheduler import setup_scheduler
+from bot.handlers.list import router as list_router
+from bot.handlers.edit import router as edit_router
 
 # --- инициализация ---
 bot = Bot(
