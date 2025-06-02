@@ -5,15 +5,14 @@ import re
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from bot.core.db import SessionLocal
-from bot.models.models import Plan
+from bot.repositories.task_repo import TaskRepo
 from bot.services.updater import update_posts
 from bot.utils.utils import parse_user_datetime
 from bot.keyboards.keyboards import main_kb
 
 router = Router()
 
-# ———————————————————— helpers ————————————————————
-ID_RE = re.compile(r"#(\d{1,6})")  # ищем #123
+ID_RE = re.compile(r"#(\d{1,6})")
 
 def extract_id(text: str | None) -> int | None:
     """Вернёт int ID, если в тексте есть #123."""
@@ -25,18 +24,15 @@ def extract_id(text: str | None) -> int | None:
 
 def parse_id_or_reply(msg: types.Message) -> int | None:
     """Получить ID либо из аргумента команды, либо из reply."""
-    # 1) /del 3  — аргумент
     cmd, *args = msg.text.split(maxsplit=1)
     if args and args[0].isdigit():
         return int(args[0])
 
-    # 2) reply
     if msg.reply_to_message:
         return extract_id(msg.reply_to_message.text)
     return None
 
 
-# ———————————————————— УДАЛЕНИЕ ————————————————————
 @router.message(Command("del"))
 async def cmd_del(msg: types.Message):
     pid = parse_id_or_reply(msg)
@@ -44,19 +40,18 @@ async def cmd_del(msg: types.Message):
         await msg.answer("Укажи ID: <code>/del 3</code> или ответь /del на сообщение со списком.")
         return
 
-    with SessionLocal() as db:
-        plan = db.get(Plan, pid)
-        if not plan or plan.state == "deleted":
-            await msg.answer("План не найден.")
-            return
-        plan.state = "deleted"
-        db.commit()
+    with SessionLocal() as db_session:
+        task_repo = TaskRepo(db_session)
+        success = task_repo.mark_deleted(pid)
+
+    if not success:
+        await msg.answer("План не найден или уже удалён.")
+        return
 
     await update_posts(msg.bot)
     await msg.answer("❌ План удалён.", reply_markup=main_kb())
 
 
-# ———————————————————— РЕДАКТИРОВАНИЕ ————————————————————
 class EditEvent(StatesGroup):
     choose_field = State()
     new_value    = State()
@@ -71,7 +66,6 @@ async def cmd_edit_start(msg: types.Message, state: FSMContext):
         return
 
     await state.update_data(pid=pid)
-    # показываем inline кнопки выбора поля
     kb = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [types.InlineKeyboardButton(text=v, callback_data=f"ef:{k}")]
@@ -102,8 +96,10 @@ async def save_new_value(msg: types.Message, state: FSMContext):
     field = data["field"]
     raw   = msg.text.strip()
 
-    with SessionLocal() as db:
-        plan = db.get(Plan, pid)
+    with SessionLocal() as db_session:
+        task_repo = TaskRepo(db_session)
+        plan = task_repo.get(pid)
+
         if not plan or plan.state == "deleted":
             await msg.answer("План не найден.")
             await state.clear()
@@ -111,20 +107,18 @@ async def save_new_value(msg: types.Message, state: FSMContext):
 
         if field == "title":
             plan.title = raw
-
         elif field == "description":
             plan.description = None if raw.lower() == "empty" else raw
-
         elif field == "datetime":
             dt_parsed = parse_user_datetime(raw)
             if not dt_parsed:
                 await msg.answer("Не понял дату. Формат: <code>22.05 21:30</code>")
                 return
             plan.ts_utc = dt_parsed
-            plan.reminded_24h = False  # сбрасываем флаги напоминаний
+            plan.reminded_24h = False
             plan.reminded_90m = False
 
-        db.commit()
+        task_repo.update(plan)
 
     await update_posts(msg.bot)
     await msg.answer("✅ Обновлено.", reply_markup=main_kb())
