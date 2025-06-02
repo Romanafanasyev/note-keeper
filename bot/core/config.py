@@ -1,15 +1,16 @@
 # bot/core/config.py
-from dotenv import load_dotenv
 import os
 from zoneinfo import ZoneInfo
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
 # Токен Телеграм-бота
-BOT_TOKEN   = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # ID Канала, в котором будут публиковаться планы
-CHANNEL_ID  = os.getenv("CHANNEL_ID")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 # Часовой пояс
 LOCAL_TZ = ZoneInfo("Europe/Moscow")

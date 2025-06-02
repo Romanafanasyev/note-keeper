@@ -1,11 +1,17 @@
-import sys, asyncio
+import asyncio
+import sys
+
 from aiogram import Bot
+
 from bot.core.config import BOT_TOKEN
+
 
 async def main():
     bot = Bot(BOT_TOKEN)
     me = await bot.get_me()
     print(me.username)
+
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())

@@ -1,8 +1,10 @@
 # bot/repositories/base_repo.py
-from sqlalchemy.orm import Session
-from typing import Type, TypeVar, Generic, Optional, List
+from typing import Generic, List, Optional, Type, TypeVar
 
-ModelType = TypeVar('ModelType')
+from sqlalchemy.orm import Session
+
+ModelType = TypeVar("ModelType")
+
 
 class BaseRepo(Generic[ModelType]):
     def __init__(self, session: Session, model: Type[ModelType]) -> None:

@@ -4,3 +4,5 @@ aiosqlite
 APScheduler==3.*
 python-dateutil
 python-dotenv
+black==25.*
+isort==6.*
