@@ -6,9 +6,10 @@ from aiogram import Bot
 
 from bot.core.config import CHANNEL_ID, LOCAL_TZ
 from bot.core.db import SessionLocal
-from bot.models.models import ChannelPost
 from bot.repositories.channel_post_repo import ChannelPostRepo
 from bot.repositories.task_repo import TaskRepo
+from bot.services.channel_post_service import ChannelPostService, CreateChannelPostDTO
+from bot.services.task_service import TaskService
 
 TAGS = ("month", "week", "tomorrow", "today")
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
@@ -96,25 +97,28 @@ def _format_plans(rows, tag="month"):
 
 async def ensure_posts(bot: Bot):
     with SessionLocal() as db_session:
-        channel_post_repo = ChannelPostRepo(db_session)
-        existing = {row.tag: row.message_id for row in channel_post_repo.list_all()}
+        channel_post_service = ChannelPostService(ChannelPostRepo(db_session))
+        existing = channel_post_service.get_all_posts()
+
         for tag in TAGS:
             if tag in existing:
                 continue
             msg = await bot.send_message(CHANNEL_ID, f"⏳ initializing {tag} …")
-            channel_post_repo.create(ChannelPost(tag=tag, message_id=msg.message_id))
+            dto = CreateChannelPostDTO(tag=tag, message_id=msg.message_id)
+            channel_post_service.create_channel_post(dto)
 
 
 async def update_posts(bot: Bot):
     await ensure_posts(bot)
     with SessionLocal() as db_session:
-        task_repo = TaskRepo(db_session)
-        channel_post_repo = ChannelPostRepo(db_session)
-        posts = {row.tag: row.message_id for row in channel_post_repo.list_all()}
-        for tag in TAGS:
-            start_loc, end_loc, start_utc, end_utc = _bounds(tag)
+        task_service = TaskService(TaskRepo(db_session))
+        channel_post_service = ChannelPostService(ChannelPostRepo(db_session))
+        posts = channel_post_service.get_all_posts()
 
-            plans = task_repo.get_scheduled_between(start_utc, end_utc)
+        for tag in TAGS:
+            start_loc, _, start_utc, end_utc = _bounds(tag)
+
+            plans = task_service.get_tasks_between(start_utc, end_utc)
 
             text = _header(tag, start_loc) + "\n\n" + _format_plans(plans, tag)
             try:
