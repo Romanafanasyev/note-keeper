@@ -4,7 +4,7 @@ import re
 
 from aiogram import types
 
-from bot.core.config import LOCAL_TZ
+from bot.core.config import config
 
 DATE_RE = re.compile(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?(?:\s+(\d{1,2}):(\d{2}))?")
 ID_RE = re.compile(r"#(\d{1,6})")
@@ -28,7 +28,9 @@ def parse_user_datetime(text: str) -> dt.datetime | None:
     hour = int(hour) if hour else 0
     minute = int(minute) if minute else 0
 
-    local_dt = dt.datetime(year, int(month), int(day), hour, minute, tzinfo=LOCAL_TZ)
+    local_dt = dt.datetime(
+        year, int(month), int(day), hour, minute, tzinfo=config.LOCAL_TZ
+    )
     return local_dt.astimezone(dt.timezone.utc)
 
 

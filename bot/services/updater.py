@@ -4,7 +4,7 @@ import logging
 
 from aiogram import Bot
 
-from bot.core.config import CHANNEL_ID, LOCAL_TZ
+from bot.core.config import config
 from bot.core.db import SessionLocal
 from bot.repositories.channel_post_repo import ChannelPostRepo
 from bot.repositories.task_repo import TaskRepo
@@ -30,7 +30,7 @@ MONTH_RU = (
 
 
 def _local_now():
-    return dt.datetime.now(tz=LOCAL_TZ)
+    return dt.datetime.now(tz=config.LOCAL_TZ)
 
 
 def _bounds(tag: str):
@@ -74,7 +74,7 @@ def _format_plans(rows, tag="month"):
         if utc.tzinfo is None:
             utc = utc.replace(tzinfo=dt.timezone.utc)
 
-        local = utc.astimezone(LOCAL_TZ)
+        local = utc.astimezone(config.LOCAL_TZ)
         if local < now:
             continue
 
@@ -103,7 +103,7 @@ async def ensure_posts(bot: Bot):
         for tag in TAGS:
             if tag in existing:
                 continue
-            msg = await bot.send_message(CHANNEL_ID, f"⏳ initializing {tag} …")
+            msg = await bot.send_message(config.CHANNEL_ID, f"⏳ initializing {tag} …")
             dto = CreateChannelPostDTO(tag=tag, message_id=msg.message_id)
             channel_post_service.create_channel_post(dto)
 
@@ -123,7 +123,7 @@ async def update_posts(bot: Bot):
             text = _header(tag, start_loc) + "\n\n" + _format_plans(plans, tag)
             try:
                 await bot.edit_message_text(
-                    chat_id=CHANNEL_ID, message_id=posts[tag], text=text
+                    chat_id=config.CHANNEL_ID, message_id=posts[tag], text=text
                 )
             except Exception as e:
                 logging.critical(f"Ошибка во время редактирования сообщ: {e}")

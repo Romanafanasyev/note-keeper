@@ -7,3 +7,6 @@ python-dotenv
 black==25.*
 isort==6.*
 pydantic==2.*
+pydantic-settings>=2.0
+pytest==8.*
+flake8==7.*
