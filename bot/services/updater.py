@@ -1,13 +1,13 @@
 # bot/services/updater.py
-
 import datetime as dt
 from aiogram import Bot
-from sqlalchemy import select
 from bot.core.db import SessionLocal
-from bot.models.models import Plan, ChannelPost
+from bot.models.models import ChannelPost
 from bot.core.config import CHANNEL_ID
 import logging
 from bot.core.config import LOCAL_TZ
+from bot.repositories.channel_post_repo import ChannelPostRepo
+from bot.repositories.task_repo import TaskRepo
 
 TAGS = ("month", "week", "tomorrow", "today")
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
@@ -74,29 +74,25 @@ def _format_plans(rows, tag="month"):
     return "\n".join(out) or "—"
 
 async def ensure_posts(bot: Bot):
-    with SessionLocal() as db:
-        existing = {row.tag: row.message_id for row in db.scalars(select(ChannelPost)).all()}
+    with SessionLocal() as db_session:
+        channel_post_repo = ChannelPostRepo(db_session)
+        existing = {row.tag: row.message_id for row in channel_post_repo.list_all()}
         for tag in TAGS:
             if tag in existing:
                 continue
             msg = await bot.send_message(CHANNEL_ID, f"⏳ initializing {tag} …")
-            db.add(ChannelPost(tag=tag, message_id=msg.message_id))
-        db.commit()
+            channel_post_repo.create(ChannelPost(tag=tag, message_id=msg.message_id))
 
 async def update_posts(bot: Bot):
     await ensure_posts(bot)
-    with SessionLocal() as db:
-        posts = {row.tag: row.message_id for row in db.scalars(select(ChannelPost)).all()}
+    with SessionLocal() as db_session:
+        task_repo = TaskRepo(db_session)
+        channel_post_repo = ChannelPostRepo(db_session)
+        posts = {row.tag: row.message_id for row in channel_post_repo.list_all()}
         for tag in TAGS:
             start_loc, end_loc, start_utc, end_utc = _bounds(tag)
 
-            plans = db.scalars(
-                select(Plan).where(
-                    Plan.state == "scheduled",
-                    Plan.ts_utc >= min(start_utc, _local_now().astimezone(dt.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)),
-                    Plan.ts_utc < end_utc
-                ).order_by(Plan.ts_utc)
-            ).all()
+            plans = task_repo.get_scheduled_between(start_utc, end_utc)
 
             text = _header(tag, start_loc) + "\n\n" + _format_plans(plans, tag)
             try:
