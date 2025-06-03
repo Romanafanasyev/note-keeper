@@ -40,7 +40,8 @@ async def get_datetime(msg: types.Message, state: FSMContext):
     dt_parsed = parse_user_datetime(msg.text)
     if not dt_parsed:
         await msg.answer(
-            "Не понял дату. Формат: <code>22.05 21:30</code> или <code>22.05</code>"
+            "Не понял дату. Формат: <code>22.05 21:30</code> "
+            "или <code>22.05</code>"
         )
         return
     await state.update_data(ts_utc=dt_parsed)
