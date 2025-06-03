@@ -6,9 +6,7 @@ from aiogram import types
 
 from bot.core.config import config
 
-DATE_RE = re.compile(
-    r"(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?(?:\s+(\d{1,2}):(\d{2}))?"
-)
+DATE_RE = re.compile(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?(?:\s+(\d{1,2}):(\d{2}))?")
 ID_RE = re.compile(r"#(\d{1,6})")
 
 

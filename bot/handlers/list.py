@@ -29,9 +29,7 @@ def _range(tag: str):
 
 
 def _fmt_line(p) -> str:
-    local = p.ts_utc.replace(tzinfo=dt.timezone.utc).astimezone(
-        config.LOCAL_TZ
-    )
+    local = p.ts_utc.replace(tzinfo=dt.timezone.utc).astimezone(config.LOCAL_TZ)
     lead = local.strftime("%d.%m %H:%M")
     return f"<code>#{p.id:03d}</code> | {lead} | <b>{p.title}</b>"
 

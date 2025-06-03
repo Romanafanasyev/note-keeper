@@ -12,14 +12,10 @@ class TaskRepo(BaseRepo[Plan]):
     def __init__(self, session: Session) -> None:
         super().__init__(session, Plan)
 
-    def get_scheduled_between(
-        self, start: datetime, end: datetime
-    ) -> List[Plan]:
+    def get_scheduled_between(self, start: datetime, end: datetime) -> List[Plan]:
         return (
             self.session.query(Plan)
-            .filter(
-                Plan.state == "scheduled", Plan.ts_utc.between(start, end)
-            )
+            .filter(Plan.state == "scheduled", Plan.ts_utc.between(start, end))
             .order_by(Plan.ts_utc)
             .all()
         )

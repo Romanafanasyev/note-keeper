@@ -43,9 +43,7 @@ def test_edit_description(task_service):
     dto = CreateTaskDTO(title="Orig", datetime=now, description="desc")
     task = task_service.create(dto)
 
-    dto = EditTaskDTO(
-        task_id=task.id, field="description", new_value="New desc"
-    )
+    dto = EditTaskDTO(task_id=task.id, field="description", new_value="New desc")
     updated = task_service.edit_task(dto)
     assert updated.description == "New desc"
 
@@ -56,9 +54,7 @@ def test_edit_datetime(task_service):
     task = task_service.create(dto)
 
     new_dt = now + dt.timedelta(hours=1)
-    dto = EditTaskDTO(
-        task_id=task.id, field="datetime", new_value=new_dt.isoformat()
-    )
+    dto = EditTaskDTO(task_id=task.id, field="datetime", new_value=new_dt.isoformat())
     updated = task_service.edit_task(dto)
 
     # ✅ Сравниваем с new_dt, а не с task.ts_utc (они — один объект)
