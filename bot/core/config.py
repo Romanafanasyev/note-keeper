@@ -8,13 +8,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Config(BaseSettings):
     # Токен Телеграм-бота
-    BOT_TOKEN: str
+    BOT_TOKEN: str = "stub"
 
     # ID Канала, в котором будут публиковаться планы
-    CHANNEL_ID: str
+    CHANNEL_ID: str = "stub"
 
     # ID Пользователя, которому будут приходить уведомления
-    USER_ID: int
+    USER_ID: int = 0
 
     # Часовой пояс
     LOCAL_TZ: ClassVar[ZoneInfo] = ZoneInfo("Europe/Moscow")
