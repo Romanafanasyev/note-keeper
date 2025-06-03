@@ -1,13 +1,15 @@
 # tests/test_task_repo.py
 import datetime as dt
 from zoneinfo import ZoneInfo
-from bot.models.models import State
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from bot.models.models import Base, Plan
+
+from bot.models.models import Base, Plan, State
 from bot.repositories.task_repo import TaskRepo
 
 TZ = ZoneInfo("Europe/Moscow")
+
 
 def get_test_session():
     engine = create_engine("sqlite:///:memory:", echo=False)
@@ -21,7 +23,9 @@ def test_create_and_get():
     repo = TaskRepo(session)
 
     now = dt.datetime.now(tz=TZ)
-    task = Plan(title="test", ts_utc=now.astimezone(dt.timezone.utc).replace(tzinfo=None))
+    task = Plan(
+        title="test", ts_utc=now.astimezone(dt.timezone.utc).replace(tzinfo=None)
+    )
 
     created = repo.create(task)
     assert created.id is not None

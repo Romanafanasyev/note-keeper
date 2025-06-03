@@ -27,10 +27,7 @@ class Config(BaseSettings):
     def DB_PATH(self) -> Path:
         return self.BASE_DIR / "data" / "plan.db"
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 config = Config()

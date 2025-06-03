@@ -5,10 +5,11 @@ import pytest
 
 from bot.models.models import Plan, State
 from bot.repositories.task_repo import TaskRepo
-from bot.services.task_service import TaskService, CreateTaskDTO, EditTaskDTO
+from bot.services.task_service import CreateTaskDTO, EditTaskDTO, TaskService
 from tests.utils import get_test_session
 
 TZ = zoneinfo.ZoneInfo("Europe/Moscow")
+
 
 @pytest.fixture
 def task_service():
@@ -16,18 +17,16 @@ def task_service():
     repo = TaskRepo(session)
     return TaskService(repo)
 
+
 def test_create_task(task_service):
     now = dt.datetime.now(tz=TZ)
-    dto = CreateTaskDTO(
-        title="Test",
-        datetime=now,
-        description="abc"
-    )
+    dto = CreateTaskDTO(title="Test", datetime=now, description="abc")
     task = task_service.create(dto)
     assert task.id is not None
     assert task.title == "Test"
     assert task.description == "abc"
     assert task.state == State.scheduled
+
 
 def test_edit_title(task_service):
     now = dt.datetime.now(tz=TZ)
@@ -38,6 +37,7 @@ def test_edit_title(task_service):
     updated = task_service.edit_task(dto)
     assert updated.title == "Changed"
 
+
 def test_edit_description(task_service):
     now = dt.datetime.now(tz=TZ)
     dto = CreateTaskDTO(title="Orig", datetime=now, description="desc")
@@ -46,6 +46,7 @@ def test_edit_description(task_service):
     dto = EditTaskDTO(task_id=task.id, field="description", new_value="New desc")
     updated = task_service.edit_task(dto)
     assert updated.description == "New desc"
+
 
 def test_edit_datetime(task_service):
     now = dt.datetime.now(tz=TZ)

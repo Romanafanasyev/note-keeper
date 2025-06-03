@@ -1,9 +1,10 @@
 # bot/repositories/task_repo.py
 from datetime import datetime
 from typing import List
-from bot.models.models import State
+
 from sqlalchemy.orm import Session
-from bot.models.models import Plan
+
+from bot.models.models import Plan, State
 from bot.repositories.base_repo import BaseRepo
 
 
