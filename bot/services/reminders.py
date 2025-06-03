@@ -25,12 +25,16 @@ async def send_reminders(bot):
 
         ws24, we24 = next_due(24 * 60)
         plans_24h = [
-            p for p in task_service.get_tasks_between(ws24, we24) if not p.reminded_24h
+            p
+            for p in task_service.get_tasks_between(ws24, we24)
+            if not p.reminded_24h
         ]
 
         ws90, we90 = next_due(90)
         plans_90m = [
-            p for p in task_service.get_tasks_between(ws90, we90) if not p.reminded_90m
+            p
+            for p in task_service.get_tasks_between(ws90, we90)
+            if not p.reminded_90m
         ]
 
         users = [config.USER_ID]

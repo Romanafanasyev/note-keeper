@@ -11,7 +11,9 @@ LOG_FILE = LOG_PATH / "bot.log"
 logger = logging.getLogger("planbot")
 logger.setLevel(logging.INFO)
 
-file_handler = RotatingFileHandler(LOG_FILE, maxBytes=5_000_000, backupCount=3)
+file_handler = RotatingFileHandler(
+    LOG_FILE, maxBytes=5_000_000, backupCount=3
+)
 formatter = logging.Formatter(
     "[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",

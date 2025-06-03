@@ -14,7 +14,10 @@ def setup_scheduler(bot):
     logger.info("Initializing scheduler...")
 
     sched.add_job(
-        update_posts, CronTrigger(hour=0, minute=2), args=[bot], id="daily_refresh"
+        update_posts,
+        CronTrigger(hour=0, minute=2),
+        args=[bot],
+        id="daily_refresh",
     )
 
     sched.add_job(send_reminders, "interval", minutes=1, args=[bot])

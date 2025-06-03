@@ -50,7 +50,8 @@ async def get_datetime(msg: types.Message, state: FSMContext):
         resize_keyboard=True, keyboard=[[types.KeyboardButton(text="empty")]]
     )
     await msg.answer(
-        "Описание? Можешь написать текст или нажать <b>empty</b>.", reply_markup=kb
+        "Описание? Можешь написать текст или нажать <b>empty</b>.",
+        reply_markup=kb,
     )
 
 
