@@ -15,7 +15,9 @@ from bot.scheduler.scheduler import setup_scheduler
 from bot.services.updater import update_posts
 from bot.utils.logger import logger
 
-bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
+bot = Bot(
+    token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML")
+)
 dp = Dispatcher()
 dp.include_router(edit_router)
 dp.include_router(list_router)
@@ -26,7 +28,8 @@ dp.include_router(add_router)
 async def cmd_start(msg: types.Message):
     logger.info(f"User {msg.from_user.id} issued /start")
     kb = types.ReplyKeyboardMarkup(
-        resize_keyboard=True, keyboard=[[types.KeyboardButton(text="➕ Новое событие")]]
+        resize_keyboard=True,
+        keyboard=[[types.KeyboardButton(text="➕ Новое событие")]],
     )
     await msg.answer("Готов записывать планы.", reply_markup=kb)
 

@@ -45,7 +45,10 @@ class TaskService:
         return self.repo.get_scheduled_between(start, end)
 
     def set_reminded(
-        self, task_id: int, reminded_24h: bool = None, reminded_90m: bool = None
+        self,
+        task_id: int,
+        reminded_24h: bool = None,
+        reminded_90m: bool = None,
     ):
         task = self.repo.get(task_id)
         if not task:

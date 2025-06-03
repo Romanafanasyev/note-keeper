@@ -24,7 +24,8 @@ def test_create_and_get():
 
     now = dt.datetime.now(tz=TZ)
     task = Plan(
-        title="test", ts_utc=now.astimezone(dt.timezone.utc).replace(tzinfo=None)
+        title="test",
+        ts_utc=now.astimezone(dt.timezone.utc).replace(tzinfo=None),
     )
 
     created = repo.create(task)

@@ -20,7 +20,11 @@ class EditEvent(StatesGroup):
     new_value = State()
 
 
-FIELDS = {"title": "Название", "datetime": "Дата/время", "description": "Описание"}
+FIELDS = {
+    "title": "Название",
+    "datetime": "Дата/время",
+    "description": "Описание",
+}
 
 
 @router.message(Command("del"))
@@ -85,7 +89,9 @@ async def save_new_value(msg: types.Message, state: FSMContext):
     if data["field"] == "datetime":
         dt_parsed = parse_user_datetime(raw)
         if not dt_parsed:
-            await msg.answer("Не понял дату. Формат: <code>22.05 21:30</code>")
+            await msg.answer(
+                "Не понял дату. Формат: <code>22.05 21:30</code>"
+            )
             return
         raw = dt_parsed.isoformat()
 

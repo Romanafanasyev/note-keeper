@@ -8,7 +8,10 @@ from bot.core.config import config
 from bot.core.db import SessionLocal
 from bot.repositories.channel_post_repo import ChannelPostRepo
 from bot.repositories.task_repo import TaskRepo
-from bot.services.channel_post_service import ChannelPostService, CreateChannelPostDTO
+from bot.services.channel_post_service import (
+    ChannelPostService,
+    CreateChannelPostDTO,
+)
 from bot.services.task_service import TaskService
 
 TAGS = ("month", "week", "tomorrow", "today")
@@ -103,7 +106,9 @@ async def ensure_posts(bot: Bot):
         for tag in TAGS:
             if tag in existing:
                 continue
-            msg = await bot.send_message(config.CHANNEL_ID, f"⏳ initializing {tag} …")
+            msg = await bot.send_message(
+                config.CHANNEL_ID, f"⏳ initializing {tag} …"
+            )
             dto = CreateChannelPostDTO(tag=tag, message_id=msg.message_id)
             channel_post_service.create_channel_post(dto)
 
@@ -120,10 +125,14 @@ async def update_posts(bot: Bot):
 
             plans = task_service.get_tasks_between(start_utc, end_utc)
 
-            text = _header(tag, start_loc) + "\n\n" + _format_plans(plans, tag)
+            text = (
+                _header(tag, start_loc) + "\n\n" + _format_plans(plans, tag)
+            )
             try:
                 await bot.edit_message_text(
-                    chat_id=config.CHANNEL_ID, message_id=posts[tag], text=text
+                    chat_id=config.CHANNEL_ID,
+                    message_id=posts[tag],
+                    text=text,
                 )
             except Exception as e:
                 logging.critical(f"Ошибка во время редактирования сообщ: {e}")
