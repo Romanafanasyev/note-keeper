@@ -3,7 +3,7 @@ import zoneinfo
 
 import pytest
 
-from bot.models.models import Plan, State
+from bot.models.models import State
 from bot.repositories.task_repo import TaskRepo
 from bot.services.task_service import CreateTaskDTO, EditTaskDTO, TaskService
 from tests.utils import get_test_session

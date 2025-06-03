@@ -44,7 +44,8 @@ async def send_reminders(bot):
             for uid in users:
                 await bot.send_message(
                     uid,
-                    f"⏰ Через {time_left}:\n<b>{plan.title}</b>\n{local_time:%d.%m %H:%M}",
+                    f"⏰ Через {time_left}:\n<b>{plan.title}</b>\n"
+                    "{local_time:%d.%m %H:%M}",
                 )
 
         for p in plans_24h:

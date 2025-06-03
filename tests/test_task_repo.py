@@ -41,9 +41,9 @@ def test_get_scheduled_between():
     repo = TaskRepo(session)
 
     now = dt.datetime.now(tz=TZ)
-    task1 = repo.create(Plan(title="a", ts_utc=now))
-    task2 = repo.create(Plan(title="b", ts_utc=now + dt.timedelta(hours=1)))
-    task3 = repo.create(Plan(title="c", ts_utc=now + dt.timedelta(days=1)))
+    repo.create(Plan(title="a", ts_utc=now))
+    repo.create(Plan(title="b", ts_utc=now + dt.timedelta(hours=1)))
+    repo.create(Plan(title="c", ts_utc=now + dt.timedelta(days=1)))
 
     results = repo.get_scheduled_between(now, now + dt.timedelta(hours=2))
     assert len(results) == 2

@@ -32,7 +32,8 @@ async def cmd_del(msg: types.Message):
     pid = parse_id_or_reply(msg)
     if not pid:
         await msg.answer(
-            "Укажи ID: <code>/del 3</code> или ответь /del на сообщение со списком."
+            "Укажи ID: <code>/del 3</code> "
+            "или ответь /del на сообщение со списком."
         )
         return
 
@@ -53,7 +54,8 @@ async def cmd_edit_start(msg: types.Message, state: FSMContext):
     pid = parse_id_or_reply(msg)
     if not pid:
         await msg.answer(
-            "Укажи ID: <code>/edit 3</code> или ответь /edit на сообщение со списком."
+            "Укажи ID: <code>/edit 3</code> "
+            "или ответь /edit на сообщение со списком."
         )
         return
 
