@@ -40,7 +40,7 @@ async def send_reminders(bot):
         users = [config.USER_ID]
 
         async def _notify(plan, time_left: str):
-            local_time = plan.ts_utc.astimezone(config.LOCAL_TZ)
+            plan.ts_utc.astimezone(config.LOCAL_TZ)
             for uid in users:
                 await bot.send_message(
                     uid,

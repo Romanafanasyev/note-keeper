@@ -9,6 +9,7 @@ dev: run
 format:
 	black .
 	isort .
+	flake8 .
 
 # 🔁 Docker + Версионирование
 VERSION := $(shell cat VERSION)
