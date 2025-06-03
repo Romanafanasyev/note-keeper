@@ -73,7 +73,7 @@ async def save_event_and_finish(msg, state, description):
 
     with SessionLocal() as db_session:
         service = TaskService(TaskRepo(db_session))
-        service.create_task(dto)
+        service.create(dto)
 
     await update_posts(msg.bot)
     await msg.answer("✅ Событие добавлено!", reply_markup=main_kb())

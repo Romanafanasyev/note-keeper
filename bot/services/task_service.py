@@ -11,7 +11,7 @@ class TaskService:
     def __init__(self, repo: TaskRepo):
         self.repo = repo
 
-    def create_task(self, dto: CreateTaskDTO) -> Plan:
+    def create(self, dto: CreateTaskDTO) -> Plan:
         task = Plan(
             title=dto.title,
             ts_utc=dto.datetime,

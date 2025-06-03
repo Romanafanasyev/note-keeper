@@ -1,9 +1,8 @@
 # bot/repositories/task_repo.py
 from datetime import datetime
 from typing import List
-
+from bot.models.models import State
 from sqlalchemy.orm import Session
-
 from bot.models.models import Plan
 from bot.repositories.base_repo import BaseRepo
 
@@ -22,7 +21,7 @@ class TaskRepo(BaseRepo[Plan]):
 
     def mark_deleted(self, task_id: int) -> bool:
         task = self.get(task_id)
-        if task and task.state != "deleted":
+        if task and task.state != State.deleted:
             task.state = "deleted"
             self.session.commit()
             return True
