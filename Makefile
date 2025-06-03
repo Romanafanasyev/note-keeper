@@ -24,3 +24,6 @@ push:
 
 deploy: bump build push
 	@echo "🔥 VERSION $(VERSION) деплоится! Не забудь пересоздать контейнер на сервере."
+
+test:
+	PYTHONPATH=. pytest tests/

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import ClassVar
 from zoneinfo import ZoneInfo
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Config(BaseSettings):
@@ -27,9 +27,7 @@ class Config(BaseSettings):
     def DB_PATH(self) -> Path:
         return self.BASE_DIR / "data" / "plan.db"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 config = Config()
