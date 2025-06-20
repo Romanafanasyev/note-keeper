@@ -10,6 +10,7 @@ from bot.core.db import init_db
 from bot.handlers.add import router as add_router
 from bot.handlers.edit import router as edit_router
 from bot.handlers.list import router as list_router
+from bot.handlers.auth import router as auth_router
 from bot.keyboards.keyboards import main_kb
 from bot.scheduler.scheduler import setup_scheduler
 from bot.services.updater import update_posts
@@ -17,6 +18,7 @@ from bot.utils.logger import logger
 
 bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
+dp.include_router(auth_router)
 dp.include_router(edit_router)
 dp.include_router(list_router)
 dp.include_router(add_router)

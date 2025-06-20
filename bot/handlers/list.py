@@ -43,9 +43,6 @@ def build_list(tag: str) -> str:
     if not rows:
         return "Ничего нет."
     out = [_fmt_line(p) for p in rows]
-    for p in rows:
-        if p.description:
-            out.append(f"  {p.description}")
     return "\n".join(out)
 
 

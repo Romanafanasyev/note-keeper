@@ -36,12 +36,12 @@ async def send_reminders(bot):
         users = [config.USER_ID]
 
         async def _notify(plan, time_left: str):
-            plan.ts_utc.astimezone(config.LOCAL_TZ)
+            local_time = plan.ts_utc.astimezone(config.LOCAL_TZ)
             for uid in users:
                 await bot.send_message(
                     uid,
                     f"⏰ Через {time_left}:\n<b>{plan.title}</b>\n"
-                    "{local_time:%d.%m %H:%M}",
+                    f"{local_time:%d.%m %H:%M}",
                 )
 
         for p in plans_24h:
