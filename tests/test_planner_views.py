@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 from bot.handlers import list as list_handler
 from bot.services import updater
-from bot.services.updater import TAGS, _format_plans, _legacy_post_mapping
+from bot.services.updater import TAGS, _format_plans
 
 
 def test_next_month_is_the_top_channel_section(monkeypatch):
@@ -22,23 +22,6 @@ def test_next_month_is_the_top_channel_section(monkeypatch):
     assert start.date() == dt.date(2026, 8, 1)
     assert end.date() == dt.date(2026, 9, 1)
     assert "Август" in updater._header("next_month", start)
-
-
-def test_legacy_channel_posts_are_reused_in_the_new_order():
-    old_posts = {
-        "month": 39,
-        "week": 40,
-        "tomorrow": 41,
-        "today": 42,
-    }
-
-    assert _legacy_post_mapping(old_posts, 43) == {
-        "next_month": 39,
-        "month": 40,
-        "week": 41,
-        "tomorrow": 42,
-        "today": 43,
-    }
 
 
 def test_week_filter_means_the_next_seven_days(monkeypatch):

@@ -17,7 +17,6 @@ from bot.utils.presentation import task_is_all_day
 
 # Telegram displays older messages above newer ones, so this order is intentional.
 TAGS = ("next_month", "month", "week", "tomorrow", "today")
-LEGACY_TAGS = ("month", "week", "tomorrow", "today")
 _update_lock = asyncio.Lock()
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 MONTH_RU = (
@@ -129,37 +128,6 @@ def _replace_post_records(post_ids: dict[str, int]) -> None:
         db_session.commit()
 
 
-def _legacy_post_mapping(
-    old_posts: dict[str, int],
-    new_today_message_id: int,
-) -> dict[str, int]:
-    """Shift the four old posts up and append one new bottom post."""
-
-    return {
-        "next_month": old_posts["month"],
-        "month": old_posts["week"],
-        "week": old_posts["tomorrow"],
-        "tomorrow": old_posts["today"],
-        "today": new_today_message_id,
-    }
-
-
-async def _migrate_legacy_posts(bot: Bot, old_posts: dict[str, int]) -> None:
-    message = await bot.send_message(
-        config.CHANNEL_ID,
-        "⏳ Обновляю раздел «today»…",
-    )
-    try:
-        _replace_post_records(_legacy_post_mapping(old_posts, message.message_id))
-    except Exception:
-        try:
-            await bot.delete_message(config.CHANNEL_ID, message.message_id)
-        except TelegramBadRequest:
-            pass
-        raise
-    logger.info("Legacy channel posts migrated by appending one section")
-
-
 async def _rebuild_posts(bot: Bot, old_posts: dict[str, int]) -> None:
     new_posts: dict[str, int] = {}
     try:
@@ -192,9 +160,6 @@ async def ensure_posts(bot: Bot):
         existing = ChannelPostService(ChannelPostRepo(db_session)).get_all_posts()
 
     if all(tag in existing for tag in TAGS):
-        return
-    if "next_month" not in existing and all(tag in existing for tag in LEGACY_TAGS):
-        await _migrate_legacy_posts(bot, existing)
         return
     await _rebuild_posts(bot, existing)
 

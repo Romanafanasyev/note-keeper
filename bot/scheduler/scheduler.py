@@ -8,6 +8,14 @@ from bot.services.updater import update_posts
 from bot.utils.logger import logger
 
 
+def daily_refresh_trigger() -> CronTrigger:
+    return CronTrigger(
+        hour=0,
+        minute=2,
+        timezone=config.LOCAL_TZ,
+    )
+
+
 def setup_scheduler(bot):
     sched = AsyncIOScheduler(
         timezone=config.LOCAL_TZ,
@@ -22,7 +30,7 @@ def setup_scheduler(bot):
 
     sched.add_job(
         update_posts,
-        CronTrigger(hour=0, minute=2),
+        daily_refresh_trigger(),
         args=[bot],
         id="daily_refresh",
         replace_existing=True,
