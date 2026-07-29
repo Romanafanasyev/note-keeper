@@ -3,7 +3,7 @@ param(
     [string]$SshTarget = "note-keeper-vps",
     [string]$BackupDirectory = "$env:USERPROFILE\Backups\planbot",
     [ValidateRange(1, 3650)]
-    [int]$RetentionCount = 90
+    [int]$RetentionCount = 14
 )
 
 Set-StrictMode -Version Latest

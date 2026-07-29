@@ -97,7 +97,7 @@ sqlite3 backups/plan-*.db "PRAGMA integrity_check;"
 Скрипт `scripts/backup_planbot_to_pc.ps1` создаёт консистентную SQLite-копию
 на сервере через Backup API, скачивает её по SSH, сверяет размер и SHA-256 и
 только после этого выполняет ротацию. По умолчанию файлы сохраняются в
-`%USERPROFILE%\Backups\planbot`, последние 90 успешных копий сохраняются.
+`%USERPROFILE%\Backups\planbot`, последние 14 успешных копий сохраняются.
 
 На основном компьютере скрипт запускает задача Windows Task Scheduler
 `Planbot Database Backup`: ежедневно в 21:00 и при входе в Windows. Повторный

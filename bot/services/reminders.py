@@ -5,7 +5,7 @@ from bot.core.config import config
 from bot.core.db import SessionLocal
 from bot.repositories.task_repo import TaskRepo
 from bot.services.task_service import TaskService
-from bot.utils.presentation import task_is_all_day
+from bot.utils.presentation import MONTHS_GENITIVE, task_is_all_day
 
 ALL_DAY_REMINDER_TIME = dt.time(9, 0)
 
@@ -27,6 +27,49 @@ def _as_local(timestamp: dt.datetime) -> dt.datetime:
     return timestamp.astimezone(config.LOCAL_TZ)
 
 
+def _date_label(event_time: dt.datetime, now: dt.datetime) -> str:
+    event_date = event_time.date()
+    today = now.date()
+    if event_date == today:
+        return "Сегодня"
+    if event_date == today + dt.timedelta(days=1):
+        month = MONTHS_GENITIVE[event_time.month - 1]
+        return f"Завтра, {event_time.day} {month}"
+    return f"{event_time.day} {MONTHS_GENITIVE[event_time.month - 1]}"
+
+
+def format_timed_reminder(
+    plan,
+    reminder_kind: str,
+    *,
+    now: dt.datetime | None = None,
+) -> str:
+    local_time = _as_local(plan.ts_utc)
+    now_local = now or dt.datetime.now(config.LOCAL_TZ)
+    if reminder_kind == "24h":
+        icon = "🔔"
+        time_left = "Через 24 часа"
+    elif reminder_kind == "90m":
+        icon = "⏰"
+        time_left = "Через 1 час 30 минут"
+    else:
+        raise ValueError(f"Unknown reminder kind: {reminder_kind}")
+
+    title = html.escape(plan.title)
+    date_label = _date_label(local_time, now_local)
+    return (
+        f"{icon} <b>{title}</b>\n\n"
+        f"<b>{time_left}</b>\n"
+        f"📅 <b>{date_label}</b>\n"
+        f"🕒 <b>{local_time:%H:%M}</b>"
+    )
+
+
+def format_all_day_reminder(plan) -> str:
+    title = html.escape(plan.title)
+    return f"📅 <b>{title}</b>\n\n<b>Сегодня · весь день</b>"
+
+
 async def send_reminders(bot):
     with SessionLocal() as db_session:
         task_service = TaskService(TaskRepo(db_session))
@@ -45,20 +88,18 @@ async def send_reminders(bot):
             if not plan.reminded_90m and not task_is_all_day(plan)
         ]
 
-        async def _notify(plan, time_left: str):
-            local_time = _as_local(plan.ts_utc)
+        async def _notify(plan, reminder_kind: str):
             await bot.send_message(
                 config.USER_ID,
-                f"⏰ Через {time_left}:\n<b>{html.escape(plan.title)}</b>\n"
-                f"{local_time:%d.%m %H:%M}",
+                format_timed_reminder(plan, reminder_kind),
             )
 
         for plan in plans_24h:
-            await _notify(plan, "24 часа")
+            await _notify(plan, "24h")
             task_service.set_reminded(plan.id, reminded_24h=True)
 
         for plan in plans_90m:
-            await _notify(plan, "90 минут")
+            await _notify(plan, "90m")
             task_service.set_reminded(plan.id, reminded_90m=True)
 
         now_local = dt.datetime.now(config.LOCAL_TZ)
@@ -76,6 +117,6 @@ async def send_reminders(bot):
         for plan in all_day_plans:
             await bot.send_message(
                 config.USER_ID,
-                f"📅 Сегодня:\n<b>{html.escape(plan.title)}</b>",
+                format_all_day_reminder(plan),
             )
             task_service.set_reminded(plan.id, reminded_90m=True)

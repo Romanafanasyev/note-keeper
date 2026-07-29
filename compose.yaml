@@ -1,6 +1,6 @@
 services:
   planbot:
-    image: romaamor66/planbot:0.11.2
+    image: romaamor66/planbot:0.11.3
     container_name: planbot
     init: true
     restart: unless-stopped
