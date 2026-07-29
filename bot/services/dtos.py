@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, model_validator
 class CreateTaskDTO(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     datetime: datetime
+    is_all_day: bool = False
     description: Optional[str] = Field(default=None, max_length=1_000)
 
 

@@ -15,7 +15,19 @@ class TaskRepo(BaseRepo[Plan]):
     def get_scheduled_between(self, start: datetime, end: datetime) -> List[Plan]:
         return (
             self.session.query(Plan)
-            .filter(Plan.state == "scheduled", Plan.ts_utc.between(start, end))
+            .filter(
+                Plan.state == State.scheduled,
+                Plan.ts_utc >= start,
+                Plan.ts_utc < end,
+            )
+            .order_by(Plan.ts_utc)
+            .all()
+        )
+
+    def get_scheduled_after(self, start: datetime) -> List[Plan]:
+        return (
+            self.session.query(Plan)
+            .filter(Plan.state == State.scheduled, Plan.ts_utc >= start)
             .order_by(Plan.ts_utc)
             .all()
         )
@@ -23,7 +35,7 @@ class TaskRepo(BaseRepo[Plan]):
     def mark_deleted(self, task_id: int) -> bool:
         task = self.get(task_id)
         if task and task.state != State.deleted:
-            task.state = "deleted"
+            task.state = State.deleted
             self.session.commit()
             return True
         return False

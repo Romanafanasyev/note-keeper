@@ -14,7 +14,7 @@ def check() -> None:
 
     request = Request(
         f"https://api.telegram.org/bot{token}/getMe",
-        headers={"User-Agent": "planbot-health/0.10.1"},
+        headers={"User-Agent": "planbot-health"},
     )
     with urlopen(request, timeout=10) as response:
         payload = json.load(response)

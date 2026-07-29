@@ -15,10 +15,43 @@ class TaskService:
         task = Plan(
             title=dto.title,
             ts_utc=dto.datetime,
+            is_all_day=dto.is_all_day,
             description=dto.description,
             state=State.scheduled,
         )
         return self.repo.create(task)
+
+    def get_task(self, task_id: int) -> Plan | None:
+        task = self.repo.get(task_id)
+        if not task or task.state == State.deleted:
+            return None
+        return task
+
+    def update_title(self, task_id: int, title: str) -> Plan:
+        task = self.get_task(task_id)
+        if not task:
+            raise ValueError("Task not found or deleted.")
+        title = title.strip()
+        if not title or len(title) > 120:
+            raise ValueError("Title must contain 1–120 characters.")
+        task.title = title
+        return self.repo.update(task)
+
+    def update_schedule(
+        self,
+        task_id: int,
+        timestamp: datetime,
+        *,
+        is_all_day: bool,
+    ) -> Plan:
+        task = self.get_task(task_id)
+        if not task:
+            raise ValueError("Task not found or deleted.")
+        task.ts_utc = timestamp
+        task.is_all_day = is_all_day
+        task.reminded_24h = False
+        task.reminded_90m = False
+        return self.repo.update(task)
 
     def edit_task(self, dto: EditTaskDTO) -> Plan:
         task = self.repo.get(dto.task_id)
@@ -26,7 +59,7 @@ class TaskService:
             raise ValueError("Task not found or deleted.")
 
         if dto.field == "title":
-            task.title = dto.new_value
+            return self.update_title(dto.task_id, dto.new_value)
         elif dto.field == "description":
             task.description = dto.new_value or None
         elif dto.field == "datetime":
@@ -43,6 +76,9 @@ class TaskService:
 
     def get_tasks_between(self, start: datetime, end: datetime) -> List[Plan]:
         return self.repo.get_scheduled_between(start, end)
+
+    def get_upcoming_tasks(self, start: datetime) -> List[Plan]:
+        return self.repo.get_scheduled_after(start)
 
     def set_reminded(
         self,

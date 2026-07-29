@@ -26,11 +26,7 @@ dp.include_router(add_router)
 @dp.message(Command("start", "help"))
 async def cmd_start(msg: types.Message):
     logger.info(f"User {msg.from_user.id} issued /start")
-    kb = types.ReplyKeyboardMarkup(
-        resize_keyboard=True,
-        keyboard=[[types.KeyboardButton(text="➕ Новое событие")]],
-    )
-    await msg.answer("Готов записывать планы.", reply_markup=kb)
+    await msg.answer("Готов записывать планы.", reply_markup=main_kb())
 
 
 @dp.message(Command("force_update"))
@@ -47,12 +43,15 @@ async def main():
         token=config.BOT_TOKEN.get_secret_value(),
         default=DefaultBotProperties(parse_mode="HTML"),
     )
-    scheduler = setup_scheduler(bot)
+    scheduler = None
     try:
+        await update_posts(bot)
+        scheduler = setup_scheduler(bot)
         logger.info("Polling started.")
         await dp.start_polling(bot, close_bot_session=False)
     finally:
-        scheduler.shutdown(wait=False)
+        if scheduler is not None:
+            scheduler.shutdown(wait=False)
         await bot.session.close()
 
 

@@ -37,6 +37,33 @@ def parse_user_datetime(text: str) -> dt.datetime | None:
     return local_dt.astimezone(dt.timezone.utc)
 
 
+def parse_time_input(text: str) -> dt.time | None:
+    """Parse strict, unambiguous time forms: 22, 2217, 22 17, 22:17."""
+
+    raw = text.strip()
+    hour: int
+    minute: int
+
+    if re.fullmatch(r"\d{1,2}", raw):
+        hour, minute = int(raw), 0
+    elif re.fullmatch(r"\d{3,4}", raw):
+        hour, minute = int(raw[:-2]), int(raw[-2:])
+    else:
+        match = re.fullmatch(r"(\d{1,2})[:\s](\d{2})", raw)
+        if not match:
+            return None
+        hour, minute = map(int, match.groups())
+
+    if hour > 23 or minute > 59:
+        return None
+    return dt.time(hour, minute)
+
+
+def local_schedule_to_utc(date: dt.date, time: dt.time) -> dt.datetime:
+    local = dt.datetime.combine(date, time, tzinfo=config.LOCAL_TZ)
+    return local.astimezone(dt.timezone.utc)
+
+
 def extract_id(text: str | None) -> int | None:
     """Вернёт int ID, если в тексте есть #123."""
     if not text:

@@ -17,5 +17,5 @@ def test_channel_output_escapes_task_html():
 
     assert "<b>not markup</b>" not in output
     assert "&lt;b&gt;not markup&lt;/b&gt;" in output
-    assert "&lt;a href=&#x27;bad&#x27;&gt;description&lt;/a&gt;" in output
+    assert "description" not in output
     assert str(config.LOCAL_TZ) == "Europe/Moscow"

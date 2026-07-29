@@ -25,7 +25,34 @@ def test_create_task(task_service):
     assert task.id is not None
     assert task.title == "Test"
     assert task.description == "abc"
+    assert task.is_all_day is False
     assert task.state == State.scheduled
+
+
+def test_create_and_reschedule_all_day_task(task_service):
+    now = dt.datetime.now(tz=TZ)
+    task = task_service.create(
+        CreateTaskDTO(
+            title="All day",
+            datetime=now,
+            description=None,
+            is_all_day=True,
+        )
+    )
+    assert task.is_all_day is True
+
+    task.reminded_24h = True
+    task.reminded_90m = True
+    new_time = now + dt.timedelta(days=1, hours=9)
+    updated = task_service.update_schedule(
+        task.id,
+        new_time,
+        is_all_day=False,
+    )
+
+    assert updated.is_all_day is False
+    assert updated.reminded_24h is False
+    assert updated.reminded_90m is False
 
 
 def test_edit_title(task_service):
