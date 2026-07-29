@@ -68,6 +68,6 @@ def test_edit_invalid_field(task_service):
     dto = CreateTaskDTO(title="Orig", datetime=now, description=None)
     task = task_service.create(dto)
 
-    dto = EditTaskDTO(task_id=task.id, field="wrong", new_value="123")
     with pytest.raises(ValueError):
+        dto = EditTaskDTO(task_id=task.id, field="wrong", new_value="123")
         task_service.edit_task(dto)

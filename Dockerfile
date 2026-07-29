@@ -1,21 +1,37 @@
-# ---- build stage ----
-FROM python:3.11-slim as builder
-WORKDIR /app
+# syntax=docker/dockerfile:1
+
+FROM python:3.13-alpine@sha256:399babc8b49529dabfd9c922f2b5eea81d611e4512e3ed250d75bd2e7683f4b0 AS builder
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /build
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN python -m pip install \
+    --no-compile \
+    --prefix=/install \
+    --require-hashes \
+    -r requirements.txt
 
-# ---- runtime stage ----
-FROM python:3.11-slim
-ENV PYTHONUNBUFFERED=1
+FROM python:3.13-alpine@sha256:399babc8b49529dabfd9c922f2b5eea81d611e4512e3ed250d75bd2e7683f4b0
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/usr/local/bin:$PATH
+
+RUN addgroup -g 10001 -S planbot \
+    && adduser -u 10001 -S -D -H -G planbot -s /sbin/nologin planbot
+
+COPY --from=builder /install /usr/local
+
 WORKDIR /app
-# копируем зависимости из builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
-# копируем исходники
-COPY bot/ bot/
+COPY --chown=10001:10001 bot/ bot/
+RUN mkdir /app/data && chown 10001:10001 /app/data
 
-# healthcheck: простой запрос getMe
-COPY bot/health.py .
-HEALTHCHECK CMD python health.py || exit 1
+USER 10001:10001
+
+HEALTHCHECK --interval=60s --timeout=15s --start-period=20s --retries=3 \
+    CMD ["python", "-m", "bot.health"]
 
 CMD ["python", "-m", "bot.main"]

@@ -1,30 +1,49 @@
-# Makefile
+IMAGE := romaamor66/planbot
+VERSION = $(shell cat VERSION)
 
-# 🔧 Dev
+.PHONY: run dev install-dev format lint test audit verify build scan push publish bump-patch bump-minor bump-major
+
 run:
 	python -m bot.main
 
 dev: run
 
+install-dev:
+	python -m pip install --require-hashes -r requirements-dev.txt
+
 format:
-	black .
-	isort .
-	flake8 .
+	python -m black .
+	python -m isort .
 
-# 🔁 Docker + Версионирование
-VERSION := $(shell cat VERSION)
-
-bump:
-	@python scripts/bump_version.py
-
-build:
-	docker build -t romaamor66/planbot:$(VERSION) .
-
-push:
-	docker push romaamor66/planbot:$(VERSION)
-
-deploy: bump build push
-	@echo "🔥 VERSION $(VERSION) деплоится! Не забудь пересоздать контейнер на сервере."
+lint:
+	python -m black --check .
+	python -m isort --check-only .
+	python -m flake8 .
 
 test:
-	PYTHONPATH=. pytest tests/
+	python -m pytest
+
+audit:
+	python -m pip_audit -r requirements.txt
+
+verify: lint test audit
+
+build:
+	docker build --pull --platform linux/amd64 -t $(IMAGE):$(VERSION) .
+
+scan:
+	docker scout cves $(IMAGE):$(VERSION) --only-severity critical,high
+
+push:
+	docker push $(IMAGE):$(VERSION)
+
+publish: verify build scan push
+
+bump-patch:
+	python scripts/bump_version.py patch
+
+bump-minor:
+	python scripts/bump_version.py minor
+
+bump-major:
+	python scripts/bump_version.py major

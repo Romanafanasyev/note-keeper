@@ -3,6 +3,7 @@ from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from pydantic import ValidationError
 
 from bot.core.db import SessionLocal
 from bot.keyboards.keyboards import main_kb
@@ -85,7 +86,10 @@ async def choose_field(cb: types.CallbackQuery, state: FSMContext):
 @router.message(EditEvent.new_value)
 async def save_new_value(msg: types.Message, state: FSMContext):
     data = await state.get_data()
-    raw = msg.text.strip()
+    raw = (msg.text or "").strip()
+    if not raw:
+        await msg.answer("Новое значение должно быть текстом.")
+        return
 
     if data["field"] == "datetime":
         dt_parsed = parse_user_datetime(raw)
@@ -94,7 +98,11 @@ async def save_new_value(msg: types.Message, state: FSMContext):
             return
         raw = dt_parsed.isoformat()
 
-    dto = EditTaskDTO(task_id=data["pid"], field=data["field"], new_value=raw)
+    try:
+        dto = EditTaskDTO(task_id=data["pid"], field=data["field"], new_value=raw)
+    except ValidationError:
+        await msg.answer("Значение некорректно или слишком длинное.")
+        return
 
     with SessionLocal() as db_session:
         service = TaskService(TaskRepo(db_session))

@@ -28,7 +28,15 @@ async def start_add(msg: types.Message, state: FSMContext):
 
 @router.message(AddEvent.title)
 async def get_title(msg: types.Message, state: FSMContext):
-    await state.update_data(title=msg.text.strip())
+    title = (msg.text or "").strip()
+    if not title:
+        await msg.answer("Название должно быть текстом и не может быть пустым.")
+        return
+    if len(title) > 120:
+        await msg.answer("Название слишком длинное — максимум 120 символов.")
+        return
+
+    await state.update_data(title=title)
     await state.set_state(AddEvent.datetime)
     await msg.answer(
         "Теперь дату и время (DD.MM HH:MM). Например: <code>22.05 21:30</code>"
@@ -37,7 +45,7 @@ async def get_title(msg: types.Message, state: FSMContext):
 
 @router.message(AddEvent.datetime)
 async def get_datetime(msg: types.Message, state: FSMContext):
-    dt_parsed = parse_user_datetime(msg.text)
+    dt_parsed = parse_user_datetime(msg.text or "")
     if not dt_parsed:
         await msg.answer(
             "Не понял дату. Формат: <code>22.05 21:30</code> " "или <code>22.05</code>"
@@ -62,7 +70,14 @@ async def empty_description(msg: types.Message, state: FSMContext):
 
 @router.message(AddEvent.description)
 async def get_description(msg: types.Message, state: FSMContext):
-    await save_event_and_finish(msg, state, description=msg.text.strip())
+    description = (msg.text or "").strip()
+    if not description:
+        await msg.answer("Пришли текст описания или нажми <b>empty</b>.")
+        return
+    if len(description) > 1_000:
+        await msg.answer("Описание слишком длинное — максимум 1000 символов.")
+        return
+    await save_event_and_finish(msg, state, description=description)
 
 
 async def save_event_and_finish(msg, state, description):

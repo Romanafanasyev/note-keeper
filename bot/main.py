@@ -11,12 +11,13 @@ from bot.handlers.add import router as add_router
 from bot.handlers.edit import router as edit_router
 from bot.handlers.list import router as list_router
 from bot.keyboards.keyboards import main_kb
+from bot.middlewares import AccessControlMiddleware
 from bot.scheduler.scheduler import setup_scheduler
 from bot.services.updater import update_posts
 from bot.utils.logger import logger
 
-bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
+dp.update.outer_middleware(AccessControlMiddleware(config.USER_ID))
 dp.include_router(edit_router)
 dp.include_router(list_router)
 dp.include_router(add_router)
@@ -35,20 +36,28 @@ async def cmd_start(msg: types.Message):
 @dp.message(Command("force_update"))
 async def force_update(msg: types.Message):
     logger.info("Force update triggered")
-    await update_posts(bot)
+    await update_posts(msg.bot)
     await msg.answer("Канал обновлён.", reply_markup=main_kb())
 
 
 async def main():
     logger.info("Starting bot...")
     init_db()
-    setup_scheduler(bot)
-    logger.info("Polling started.")
-    await dp.start_polling(bot)
+    bot = Bot(
+        token=config.BOT_TOKEN.get_secret_value(),
+        default=DefaultBotProperties(parse_mode="HTML"),
+    )
+    scheduler = setup_scheduler(bot)
+    try:
+        logger.info("Polling started.")
+        await dp.start_polling(bot, close_bot_session=False)
+    finally:
+        scheduler.shutdown(wait=False)
+        await bot.session.close()
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except Exception as e:
-        logger.exception(f"Bot crashed: {e}")
+    except Exception:
+        logger.exception("Bot crashed")
