@@ -1,5 +1,6 @@
 # bot/handlers/list.py
 import datetime as dt
+import html
 from datetime import timedelta
 
 from aiogram import F, Router, types
@@ -12,6 +13,7 @@ from bot.repositories.task_repo import TaskRepo
 from bot.services.task_service import TaskService
 
 router = Router()
+VALID_TAGS = {"today", "week", "month"}
 
 
 def _range(tag: str):
@@ -31,7 +33,7 @@ def _range(tag: str):
 def _fmt_line(p) -> str:
     local = p.ts_utc.replace(tzinfo=dt.timezone.utc).astimezone(config.LOCAL_TZ)
     lead = local.strftime("%d.%m %H:%M")
-    return f"<code>#{p.id:03d}</code> | {lead} | <b>{p.title}</b>"
+    return f"<code>#{p.id:03d}</code> | {lead} | <b>{html.escape(p.title)}</b>"
 
 
 def build_list(tag: str) -> str:
@@ -49,6 +51,9 @@ def build_list(tag: str) -> str:
 @router.message(Command("list"))
 async def cmd_list(msg: types.Message, command: Command):
     tag = (command.args or "").strip().lower() or "today"
+    if tag not in VALID_TAGS:
+        await msg.answer("Используй: <code>/list today|week|month</code>")
+        return
     await msg.answer(
         f"<b>{tag.capitalize()}</b>\n\n{build_list(tag)}",
         reply_markup=main_kb(),

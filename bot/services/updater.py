@@ -1,8 +1,10 @@
 # bot/services/updater.py
+import asyncio
 import datetime as dt
-import logging
+import html
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramBadRequest
 
 from bot.core.config import config
 from bot.core.db import SessionLocal
@@ -13,8 +15,10 @@ from bot.services.channel_post_service import (
     CreateChannelPostDTO,
 )
 from bot.services.task_service import TaskService
+from bot.utils.logger import logger
 
 TAGS = ("month", "week", "tomorrow", "today")
+_update_lock = asyncio.Lock()
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 MONTH_RU = (
     "январь",
@@ -91,9 +95,9 @@ def _format_plans(rows, tag="month"):
             if local.time() != dt.time(0, 0):
                 lead += f" • {local.strftime('%H:%M')}"
 
-        out.append(f"🕘 <b>{lead}</b> | {p.title}")
+        out.append(f"🕘 <b>{lead}</b> | {html.escape(p.title)}")
         if p.description:
-            out.append(p.description)
+            out.append(html.escape(p.description))
             out.append("")
     return "\n".join(out) or "—"
 
@@ -112,6 +116,11 @@ async def ensure_posts(bot: Bot):
 
 
 async def update_posts(bot: Bot):
+    async with _update_lock:
+        await _update_posts(bot)
+
+
+async def _update_posts(bot: Bot):
     await ensure_posts(bot)
     with SessionLocal() as db_session:
         task_service = TaskService(TaskRepo(db_session))
@@ -130,5 +139,9 @@ async def update_posts(bot: Bot):
                     message_id=posts[tag],
                     text=text,
                 )
-            except Exception as e:
-                logging.critical(f"Ошибка во время редактирования сообщ: {e}")
+            except TelegramBadRequest as exc:
+                if "message is not modified" in exc.message.lower():
+                    logger.debug("Channel post %s is already current", tag)
+                    continue
+                logger.exception("Could not update channel post %s", tag)
+                raise

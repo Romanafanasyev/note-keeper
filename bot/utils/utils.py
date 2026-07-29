@@ -23,14 +23,17 @@ def parse_user_datetime(text: str) -> dt.datetime | None:
         return None
 
     day, month, year, hour, minute = m.groups()
-    now = dt.datetime.now()
+    now = dt.datetime.now(config.LOCAL_TZ)
     year = int(year) if year else now.year
     hour = int(hour) if hour else 0
     minute = int(minute) if minute else 0
 
-    local_dt = dt.datetime(
-        year, int(month), int(day), hour, minute, tzinfo=config.LOCAL_TZ
-    )
+    try:
+        local_dt = dt.datetime(
+            year, int(month), int(day), hour, minute, tzinfo=config.LOCAL_TZ
+        )
+    except ValueError:
+        return None
     return local_dt.astimezone(dt.timezone.utc)
 
 

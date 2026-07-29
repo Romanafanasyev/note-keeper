@@ -1,5 +1,6 @@
 # bot/services/reminders.py
 import datetime as dt
+import html
 
 from bot.core.config import config
 from bot.core.db import SessionLocal
@@ -40,7 +41,7 @@ async def send_reminders(bot):
             for uid in users:
                 await bot.send_message(
                     uid,
-                    f"⏰ Через {time_left}:\n<b>{plan.title}</b>\n"
+                    f"⏰ Через {time_left}:\n<b>{html.escape(plan.title)}</b>\n"
                     f"{local_time:%d.%m %H:%M}",
                 )
 

@@ -1,106 +1,88 @@
-# 📝 note-keeper
+# note-keeper
 
-## 📌 Описание
-`note-keeper` — это Telegram-бот и мини-система планирования, которая позволяет пользователю удобно управлять своими задачами на сегодня, завтра, неделю и месяц.
-Он публикует напоминания в канал, присылает уведомления, хранит данные в SQLite, имеет простой API для работы с задачами и легко расширяется.
-> Проект разработан с упором на **чистую архитектуру**, **тестируемость** и **надёжную структуру**, которая облегчает поддержку и расширение.
+Личный Telegram-планировщик. Управление задачами доступно только владельцу в
+личном чате с ботом. Бот публикует четыре автоматически обновляемых поста в
+заданный Telegram-канал и присылает владельцу напоминания.
 
-### Возможности
-- ➕ Добавление, ✏️ редактирование и ❌ удаление задач из чата  
-- 📋 Списки на **сегодня / неделю / месяц** одной командой  
-- 🔔 Авто-напоминания **−24 ч** и **−90 мин**  
-- 📢 Авто-посты в канале (сегодня, завтра, неделя, месяц)  
-- 📄 Docker-образ, make-команды, GitHub Actions, unit-тесты  
-- 🗄️ Данные и логи сохраняются во внешний volume (`/opt/planbot`)
+## Безопасность и данные
 
----
+- Все входящие команды, сообщения, callback-кнопки и FSM-сценарии защищены
+  глобальным middleware по `USER_ID`.
+- Даже владелец может управлять ботом только в личном чате.
+- Посторонний пользователь получает прежнее шуточное сообщение и стикер.
+- Секреты загружаются только из `.env`; файл исключён из Git и Docker build
+  context.
+- SQLite хранится снаружи контейнера в `./data/plan.db`.
+- Контейнер работает не от root, с read-only root filesystem, без Linux
+  capabilities и с лимитами памяти, процессов и логов.
 
-## 🚀 Quick Start (Docker)
+Репозиторий можно держать публичным, пока в него не коммитятся `.env`, база
+данных, резервные копии и другие личные файлы.
+
+## Конфигурация
 
 ```bash
-# 1. Клонируем проект
-git clone https://github.com/<your-nick>/note-keeper.git
-cd note-keeper
-
-# 2. Создаём .env
-cp .env.example .env          # впишите токен и id
-
-# 3. Собираем и запускаем
-make build        # docker build …
-make run          # python -m bot.main  (для локальной отладки)
-
-# продакшен-вариант на VPS
-docker run -d \
-  --name planbot \
-  --restart unless-stopped \
-  --env-file /opt/planbot/.env \
-  -v /opt/planbot/data:/app/data \
-  -v /opt/planbot/logs:/app/logs \
-  romaamor66/planbot:0.8
-```
----
-
-## 🏗️ Архитектура проекта
-
-```
-bot/
-├─ core/          – singleton-конфиг, инициализация БД
-├─ handlers/      – тонкие Telegram-хендлеры (presentation layer)
-├─ services/      – бизнес-логика (service-layer, DTO)
-├─ repositories/  – доступ к данным (repository pattern)
-├─ models/        – ORM-модели SQLAlchemy
-├─ scheduler/     – APScheduler (cron + interval jobs)
-├─ utils/         – логгер, валидаторы, парсеры
-└─ main.py        – точка входа и DI-регистрация
+cp .env.example .env
 ```
 
-Используемые паттерны
+Обязательные переменные:
 
+| Переменная | Назначение |
+|---|---|
+| `BOT_TOKEN` | Токен Telegram-бота от BotFather |
+| `CHANNEL_ID` | Числовой ID канала, куда бот публикует планы |
+| `USER_ID` | Единственный Telegram user ID с доступом к управлению |
+| `TIMEZONE` | IANA timezone, по умолчанию `Europe/Moscow` |
 
-| Слой              | Паттерн           | Роль                               |
-|-------------------|-------------------|------------------------------------|
-| `core.config`     | Singleton         | Единый источник настроек           |
-| `handlers/*`      | Command           | Каждая команда - отдельная функция |
-| `services/*`      | Service Layer     | Инкапсулирует бизнес-правила       |
-| `repositories/*`  | Repository        | Абстрагирует SQL                   |
-| `utils/logger.py` | Factory           | Создает общий Rotating Logger      |
-| `scheduler/*`     | Scheduler/Adapter | Тонкий адаптер над APScheduler     |
+При некорректной или отсутствующей обязательной настройке приложение
+завершается сразу, не запускаясь в небезопасном режиме.
 
-*Благодаря такому разделению код легко тестировать и расширять.*
+## Локальная разработка
 
----
+Требуется Python 3.13.
 
-## ⚙️ Переменные окружения
+```bash
+python -m venv .venv
+.venv/Scripts/python -m pip install --require-hashes -r requirements-dev.txt
+make verify
+```
 
+`requirements.in` и `requirements-dev.in` — исходные прямые зависимости.
+Файлы `requirements*.txt` зафиксированы вместе с транзитивными зависимостями и
+hash-проверками.
 
-| Переменная | Описание                                  |
-|------------|-------------------------------------------|
-| BOT_TOKEN  | Токен Telegram-бота                       |
-| CHANNEL_ID | ID канала/чата для постов                 |
-| USER_ID    | ID пользователя для личных уведомлений    |
-| TZ*        | Часовой пояс (по умолчанию `Europe/Moscow`) |
+## Docker
 
-* `TZ` берётся из `.env`; если не указан — используется `Europe/Moscow`.
+```bash
+docker compose config --quiet
+docker compose up -d
+docker compose ps
+```
 
----
+Compose монтирует `./data` в `/app/data`; пересоздание или обновление контейнера
+не удаляет задачи. Перед обновлением всё равно делается SQLite backup.
 
-## 🛠️ Make-команды
+## Версии и публикация
 
-| Команда       | Что делает                     |
-|---------------|--------------------------------|
-| `make dev`    | Запуск бота локально           |
-| `make format` | `black + isort + flake8`       |
-| `make test`   | PyTest с in-memory SQLite      |
-| `make bump`   | `Авто-инкремент файла VERSION` |
-| `make build`  | Запушить образ в Docker Hub    |
-| `make deploy` | CI                             |
+Версия хранится в `VERSION` в формате SemVer:
 
----
+```bash
+make bump-patch  # 0.10.0 -> 0.10.1
+make bump-minor  # 0.10.0 -> 0.11.0
+make bump-major  # 0.10.0 -> 1.0.0
+make publish
+```
 
-## 💬 Вклад
+`make publish` не меняет номер автоматически: он проверяет код и зависимости,
+собирает, сканирует и публикует ровно тот тег, который записан в `VERSION`.
 
-PR и issue — **welcome**.
-Если нашли баг или есть идея улучшения — открывайте тикет или присылайте pull-request.
+## Резервная копия SQLite
 
+Нельзя копировать работающую SQLite-базу обычным `cp`, если используется WAL.
+Безопасный online backup:
 
-
+```bash
+mkdir -p backups
+sqlite3 data/plan.db ".backup 'backups/plan-$(date +%Y%m%d-%H%M%S).db'"
+sqlite3 backups/plan-*.db "PRAGMA integrity_check;"
+```
